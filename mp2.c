@@ -41,9 +41,9 @@ void scan(const char *str, const char *format, ...);
 void update_list(int x);
 
 // API functions
-void registerProc(void);
-void unregisterProc(void);
-void yieldProc(void);
+void registerProc(int, int, int);
+void unregisterProc(int);
+void yieldProc(int);
 
 
 // File Ops
@@ -168,7 +168,7 @@ static int mp2_write(struct file *file, const char *buffer, unsigned long count,
 {
 	//struct Node *tmp = NULL;
 	char operation = '\0';
-	int pid = 0;
+	int pid = 0, period = 0, proc_time = 0;
 
 	printk(KERN_ALERT "Writing...");
 	procfs_buffer_size = count;
@@ -183,18 +183,41 @@ static int mp2_write(struct file *file, const char *buffer, unsigned long count,
 	printk(KERN_ALERT "Get from user:%s, count=%lu\n", procfs_buffer, count);
 #endif
 
+	// Parse input to check for operation
+	scan(procfs_buffer, "%c,%d", &operation, &pid);
+
 	// Put the pid and current time into linked list
-	//tmp = (struct Node*)kmalloc(sizeof(struct Node), 0);
-	scan(procfs_buffer, "%d%c", &pid, &operation);
-	//tmp->exec_time = 0;
 	/*
+	tmp = (struct Node*)kmalloc(sizeof(struct Node), 0);
+	tmp->exec_time = 0;
 	down(&list_lock);
 	list_add(&(tmp->list), &(mylist.list));
 	up(&list_lock);
 	*/
+
 #ifdef DEBUG
 	printk(KERN_ALERT "pid=%d, op=%c\n", pid, operation);
 #endif
+
+	switch(operation)
+	{
+		case 'r':
+			// Parse the rest of the input
+			scan(procfs_buffer, "%c,%d,%d,%d", &operation, &pid, &period, &proc_time);
+			registerProc(pid, period, proc_time);
+			break;
+		case 'u':
+			unregisterProc(pid);
+			break;
+		case 'y':
+			yieldProc(pid);
+			break;
+		default:
+#ifdef DEBUG
+			printk(KERN_ALERT "Not recognized operation\n");
+#endif
+			break;
+	}
 
 	return procfs_buffer_size;
 }
@@ -223,23 +246,24 @@ void update_list(int x)
 	up(&list_lock);
 }
 
-void registerProc(void)
+void registerProc(int pid, int period, int proc_time)
 {
 #ifdef DEBUG
-	printk(KERN_ALERT "Register called\n");
+	printk(KERN_ALERT "Register called by pid=%d\n", pid);
+	printk(KERN_ALERT "\tw/ period=%d, proc_time=%d\n", period, proc_time);
 #endif
 }
 
-void unregisterProc(void)
+void unregisterProc(int pid)
 {
 #ifdef DEBUG
-	printk(KERN_ALERT "Unregister called\n");
+	printk(KERN_ALERT "Unregister called by pid=%d\n", pid);
 #endif
 }
 
-void yieldProc(void)
+void yieldProc(int pid)
 {
 #ifdef DEBUG
-	printk(KERN_ALERT "Yield called\n");
+	printk(KERN_ALERT "Yield called by pid=%d\n", pid);
 #endif
 }
