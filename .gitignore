@@ -26,3 +26,16 @@
 *.exe
 *.out
 *.app
+
+# Kernel modules
+*.cmd
+*.symvers
+*.order
+*.ko
+*.mod.c
+
+# userapp
+userapp
+
+# vim temp files
+*.swp
